@@ -69,7 +69,7 @@ Unit tests need nothing else. Integration tests start PostgreSQL through Testcon
 
 Requirements: Android Studio (recent stable) with an SDK that includes API 36, and JDK 17 or newer (the bundled JBR is fine).
 
-1. Open the `android/` folder in Android Studio and let Gradle sync (it may offer to create the wrapper).
+1. Open the `android/` folder in Android Studio and let Gradle sync. `android/gradle/wrapper/gradle-wrapper.properties` pins Gradle 8.14.3 (the Android Gradle Plugin 8.11 needs 8.13 or newer). If sync fails with "Minimum supported Gradle version is 8.13", open that file and make sure `distributionUrl` ends in `gradle-8.14.3-bin.zip`, then sync again.
 2. Copy `android/local.properties.example` to `android/local.properties` and set `api.baseUrl`:
    - emulator: `http://10.0.2.2:8080/` (the default)
    - physical device on the same Wi-Fi: `http://<your PC's LAN IP>:8080/`
