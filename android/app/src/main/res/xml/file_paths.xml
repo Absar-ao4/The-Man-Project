@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Images the app hands to other apps (the Lock-in summary card). Only this cache folder is shared. -->
+<paths>
+    <cache-path name="shared" path="shared/" />
+    <!-- The camera writes a meal photo here for a moment; it is deleted as soon as it has been shrunk. -->
+    <cache-path name="photo_scan" path="photo_scan/" />
+    <!-- Progress reports and the data export, shared through the system share sheet. Replaced each time one is made. -->
+    <cache-path name="exports" path="exports/" />
+</paths>

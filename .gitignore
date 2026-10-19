@@ -1,0 +1,28 @@
+# Secrets
+.env
+*.env.local
+local.properties
+*.jks
+*.keystore
+
+# Backend
+backend/build/
+backend/.gradle/
+backend/out/
+
+# Android
+android/build/
+android/.gradle/
+android/app/build/
+android/.idea/
+*.iml
+captures/
+
+# OS / IDE
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+
+# Backups
+ops/backups/

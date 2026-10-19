@@ -1,0 +1,103 @@
+spring:
+  application:
+    name: the-man-project
+  lifecycle:
+    timeout-per-shutdown-phase: 20s
+  config:
+    # Lets you run from backend/ or the repo root with just a .env file (see .env.example).
+    import: "optional:file:./.env[.properties],optional:file:../.env[.properties]"
+  datasource:
+    # Point these at your PostgreSQL 16 instance (see ../.env.example).
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/manproject}
+    username: ${DB_USER:manproject}
+    password: ${DB_PASSWORD:}
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: none
+    properties:
+      hibernate:
+        jdbc:
+          time_zone: UTC
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+  jackson:
+    default-property-inclusion: non_null
+    deserialization:
+      fail-on-unknown-properties: false
+
+server:
+  port: ${PORT:8080}
+  # Finish the requests in flight before stopping, so a deploy does not cut off a sync.
+  shutdown: graceful
+  forward-headers-strategy: framework
+  error:
+    include-message: never
+    include-stacktrace: never
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health
+  endpoint:
+    health:
+      probes:
+        enabled: true
+
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+    # Set API_DOCS_ENABLED=false in production if the API description should not be public.
+    enabled: ${API_DOCS_ENABLED:true}
+  swagger-ui:
+    path: /swagger-ui
+    enabled: ${API_DOCS_ENABLED:true}
+
+app:
+  jwt:
+    # Required, at least 32 bytes. No default on purpose: the app refuses to start without it.
+    secret: ${JWT_SECRET}
+    access-token-ttl: 15m
+    refresh-token-ttl: 30d
+  rate-limit:
+    auth-per-minute: 10
+    search-per-minute: 30
+    # Per client address, for the AI calls, building a diet plan and the data export.
+    expensive-per-minute: 30
+  # Used from later phases; declared now so the env contract is stable.
+  anthropic:
+    api-key: ${ANTHROPIC_API_KEY:}
+    base-url: https://api.anthropic.com
+    # Plan explanations are short, so the small model is enough. Verify the id at https://platform.claude.com/docs/en/about-claude/models
+    explain-model: claude-haiku-5-5
+    # Per user per day. Each explanation is a paid call.
+    explain-daily-limit: 10
+  ai:
+    max-image-bytes: 4194304
+    # Per user per day uses of an AI feature. A feature that is not listed gets 10.
+    daily-limits:
+      diet-arrange: 5
+      meal-suggestions: 10
+      weekly-summary: 5
+    # USD per million tokens. Verify at https://platform.claude.com/docs/en/about-claude/pricing
+    prices:
+      claude-haiku-5-5:
+        input: 0.10
+        output: 0.50
+      claude-sonnet-5-5:
+        input: 2.00
+        output: 10.00
+  usda:
+    api-key: ${USDA_API_KEY:}
+    base-url: https://api.nal.usda.gov/fdc/v1
+  openfoodfacts:
+    base-url: https://world.openfoodfacts.org
+    # Open Food Facts asks clients to identify themselves; put a real contact here before launch.
+    user-agent: TheManProject/0.1 (fitness app backend)
+
+logging:
+  level:
+    root: INFO
+    com.example.fitapp: INFO

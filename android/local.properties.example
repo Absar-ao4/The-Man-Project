@@ -1,0 +1,8 @@
+# Copy to local.properties (git-ignored). Android Studio also writes sdk.dir here.
+sdk.dir=C\:\\Users\\YOU\\AppData\\Local\\Android\\Sdk
+
+# Backend base URL, must end with a slash.
+# Emulator -> host machine:        http://10.0.2.2:8080/
+# Physical device on same Wi-Fi:   http://192.168.x.x:8080/
+# Deployed (use https):            https://api.example.com/
+api.baseUrl=http://10.0.2.2:8080/

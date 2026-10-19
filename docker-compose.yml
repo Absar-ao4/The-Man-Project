@@ -1,0 +1,49 @@
+# One command local stack:  docker compose up --build
+# Reads values from ./.env (copy .env.example). Skip this file entirely if you
+# run PostgreSQL yourself: just point DB_URL / DB_USER / DB_PASSWORD at it.
+services:
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-manproject}
+      POSTGRES_USER: ${DB_USER:-manproject}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:?set DB_PASSWORD in .env}
+    # Bound to this machine only: the database is reached by the backend, not by the internet.
+    ports:
+      - "127.0.0.1:5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-manproject} -d ${POSTGRES_DB:-manproject}"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  backend:
+    build: ./backend
+    restart: unless-stopped
+    stop_grace_period: 30s
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      DB_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB:-manproject}
+      DB_USER: ${DB_USER:-manproject}
+      DB_PASSWORD: ${DB_PASSWORD}
+      JWT_SECRET: ${JWT_SECRET:?set JWT_SECRET in .env (32+ chars)}
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      USDA_API_KEY: ${USDA_API_KEY:-}
+      # Set to false in production to hide the Swagger page and the API description.
+      API_DOCS_ENABLED: ${API_DOCS_ENABLED:-true}
+    ports:
+      - "8080:8080"
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://localhost:8080/actuator/health || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+      start_period: 40s
+
+volumes:
+  pgdata:

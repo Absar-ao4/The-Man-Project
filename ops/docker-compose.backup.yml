@@ -1,0 +1,31 @@
+# A nightly database backup next to the stack. Use it together with the main compose file:
+#
+#   docker compose -f docker-compose.yml -f ops/docker-compose.backup.yml up -d
+#
+# Dumps land in ./ops/backups (14 days kept, BACKUP_RETENTION_DAYS to change it) at 02:30 container time (UTC).
+# Copy that folder off the machine: a backup on the same disk as the database does not survive losing the disk.
+services:
+  backup:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      DB_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB:-manproject}
+      DB_USER: ${DB_USER:-manproject}
+      DB_PASSWORD: ${DB_PASSWORD:?set DB_PASSWORD in .env}
+      BACKUP_DIR: /backups
+      RETENTION_DAYS: ${BACKUP_RETENTION_DAYS:-14}
+      # The variables above are enough: do not look for a .env file inside the container.
+      ENV_FILE: /dev/null
+    volumes:
+      - ./ops/backups:/backups
+      - ./ops/backup.sh:/ops/backup.sh:ro
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - |
+        apk add --no-cache bash > /dev/null
+        echo "30 2 * * * /bin/bash /ops/backup.sh > /proc/1/fd/1 2>&1" > /etc/crontabs/root
+        echo "backup service ready: dumps at 02:30 UTC into /backups, keeping $${RETENTION_DAYS} days"
+        exec crond -f -l 8
