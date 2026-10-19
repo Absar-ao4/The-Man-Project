@@ -1,6 +1,6 @@
 # Versions were chosen from memory and are unverified against a resolver. Bump if sync fails.
 [versions]
-agp = "8.11.1"
+agp = "8.9.2"
 kotlin = "2.2.0"
 ksp = "2.2.0-2.0.2"
 hilt = "2.57"
