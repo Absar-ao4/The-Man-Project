@@ -72,7 +72,7 @@ Requirements: Android Studio Meerkat Feature Drop (2024.3.2) or newer. The proje
 1. Open the `android/` folder in Android Studio and let Gradle sync. `android/gradle/wrapper/gradle-wrapper.properties` pins Gradle 8.14.3 (the Android Gradle Plugin 8.9 needs 8.11.1 or newer). If sync fails with "Minimum supported Gradle version", open that file and make sure `distributionUrl` ends in `gradle-8.14.3-bin.zip`, then sync again.
 2. Copy `android/local.properties.example` to `android/local.properties` and set `api.baseUrl`:
    - emulator: `http://10.0.2.2:8080/` (the default)
-   - physical device on the same Wi-Fi: `http://<your PC's LAN IP>:8080/`
+   - physical phone over USB debugging: keep `http://localhost:8080/` and run `adb reverse tcp:8080 tcp:8080` once per USB connection (adb is in `<Android SDK>\platform-tools`). The app allows plain HTTP only to `10.0.2.2` and `localhost`, so a Wi-Fi address like `http://192.168.x.x:8080/` is blocked; to use one, add that address to `app/src/main/res/xml/network_security_config.xml`
    - a release build **must** use an `https://` address: `assembleRelease` and `bundleRelease` stop with a message otherwise.
 3. Optional but recommended: add the font files listed in `app/src/main/java/com/example/fitapp/core/designsystem/Type.kt` to `app/src/main/res/font/` (Space Grotesk and DM Sans, both free on Google Fonts). Without them the system font is used.
 4. Start the backend (see above), then run the `app` configuration.
