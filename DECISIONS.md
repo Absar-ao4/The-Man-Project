@@ -367,3 +367,12 @@ Every phase section above lists its own assumptions and what it did not build. T
 - The social inbox check marks items as seen only when it could announce them (permission granted) or the app is on screen.
 - Account deletion wipes local data first inside a non-cancellable block, then clears the tokens.
 - The body summary says when height is missing or outside 100 to 250 cm instead of blaming the measurements.
+
+## Guest mode
+
+- The login screen offers "Continue as guest". `GuestSession` (in memory, singleton) holds the choice; `RootViewModel` turns it into `RootState.Guest` only while there is no session, and signing in clears it.
+- Guest mode is a self-contained preview (`feature/guest`). It makes no database or network call. The exercise library, food search, articles and every other screen read from the server, so none of them can work without an account; they are shown as locked cards with a short description instead of as broken or empty screens.
+- Tapping a locked card opens a dialog that names the feature and offers to sign in. The banner at the top has a Sign in button too. Both lead to the login screen, which has the "Create an account" link.
+- The only live control is Appearance (theme and reduce motion), a device setting stored in DataStore.
+- Not persisted on purpose: a guest has nothing to keep, and a restart returns to the login screen.
+- To let a guest use a feature later (for example the exercise library with bundled data), move it out of `GuestCatalog` into a real screen that does not need the server.

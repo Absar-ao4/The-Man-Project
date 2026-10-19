@@ -1,6 +1,7 @@
 package com.example.fitapp.navigation
 
 import com.example.fitapp.MainDispatcherRule
+import com.example.fitapp.core.guest.GuestSession
 import com.example.fitapp.core.network.ApiFailure
 import com.example.fitapp.core.util.AppResult
 import com.example.fitapp.fakes.FakeProfileRepository
@@ -51,7 +52,7 @@ class RootViewModelTest {
     @Test
     fun `no session means logged out`() =
         runTest {
-            val vm = RootViewModel(FakeTokenStore(loggedIn = false), repo)
+            val vm = RootViewModel(FakeTokenStore(loggedIn = false), repo, GuestSession())
             watch(vm)
             assertEquals(RootState.LoggedOut, vm.state.value)
             assertEquals(0, repo.refreshCalls)
@@ -61,7 +62,7 @@ class RootViewModelTest {
     fun `complete profile goes straight to the app`() =
         runTest {
             repo.profileAfterRefresh = profile(complete = true)
-            val vm = RootViewModel(FakeTokenStore(loggedIn = true), repo)
+            val vm = RootViewModel(FakeTokenStore(loggedIn = true), repo, GuestSession())
             watch(vm)
 
             assertEquals(RootState.Ready, vm.state.value)
@@ -73,7 +74,7 @@ class RootViewModelTest {
     fun `incomplete profile needs onboarding`() =
         runTest {
             repo.profileAfterRefresh = profile(complete = false)
-            val vm = RootViewModel(FakeTokenStore(loggedIn = true), repo)
+            val vm = RootViewModel(FakeTokenStore(loggedIn = true), repo, GuestSession())
             watch(vm)
             assertEquals(RootState.NeedsOnboarding, vm.state.value)
         }
@@ -82,7 +83,7 @@ class RootViewModelTest {
     fun `refresh failure with nothing cached shows an error that retry can fix`() =
         runTest {
             repo.refreshResult = AppResult.Failure(ApiFailure.Offline)
-            val vm = RootViewModel(FakeTokenStore(loggedIn = true), repo)
+            val vm = RootViewModel(FakeTokenStore(loggedIn = true), repo, GuestSession())
             watch(vm)
             assertTrue(vm.state.value is RootState.Error)
 
@@ -97,7 +98,7 @@ class RootViewModelTest {
         runTest {
             repo.profile.value = profile(complete = true)
             repo.refreshResult = AppResult.Failure(ApiFailure.Offline)
-            val vm = RootViewModel(FakeTokenStore(loggedIn = true), repo)
+            val vm = RootViewModel(FakeTokenStore(loggedIn = true), repo, GuestSession())
             watch(vm)
             assertEquals(RootState.Ready, vm.state.value)
         }
@@ -107,9 +108,55 @@ class RootViewModelTest {
         runTest {
             val tokens = FakeTokenStore(loggedIn = true)
             repo.profileAfterRefresh = profile(complete = true)
-            val vm = RootViewModel(tokens, repo)
+            val vm = RootViewModel(tokens, repo, GuestSession())
             watch(vm)
             assertEquals(RootState.Ready, vm.state.value)
+
+            tokens.clear()
+            assertEquals(RootState.LoggedOut, vm.state.value)
+        }
+
+    @Test
+    fun `choosing guest mode shows the guest preview without touching the profile`() =
+        runTest {
+            val guest = GuestSession()
+            val vm = RootViewModel(FakeTokenStore(loggedIn = false), repo, guest)
+            watch(vm)
+            assertEquals(RootState.LoggedOut, vm.state.value)
+
+            vm.enterGuest()
+
+            assertEquals(RootState.Guest, vm.state.value)
+            assertEquals(0, repo.refreshCalls)
+            assertEquals(0, repo.syncCalls)
+        }
+
+    @Test
+    fun `leaving guest mode goes back to the login screen`() =
+        runTest {
+            val vm = RootViewModel(FakeTokenStore(loggedIn = false), repo, GuestSession())
+            watch(vm)
+            vm.enterGuest()
+
+            vm.leaveGuest()
+
+            assertEquals(RootState.LoggedOut, vm.state.value)
+        }
+
+    @Test
+    fun `signing in ends guest mode so a later logout lands on the login screen`() =
+        runTest {
+            val tokens = FakeTokenStore(loggedIn = false)
+            val guest = GuestSession()
+            repo.profileAfterRefresh = profile(complete = true)
+            val vm = RootViewModel(tokens, repo, guest)
+            watch(vm)
+            vm.enterGuest()
+            assertEquals(RootState.Guest, vm.state.value)
+
+            tokens.logIn()
+            assertEquals(RootState.Ready, vm.state.value)
+            assertEquals(false, guest.active.value)
 
             tokens.clear()
             assertEquals(RootState.LoggedOut, vm.state.value)

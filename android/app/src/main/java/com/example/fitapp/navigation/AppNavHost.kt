@@ -12,6 +12,7 @@ import com.example.fitapp.core.designsystem.components.ErrorState
 import com.example.fitapp.core.designsystem.components.LoadingState
 import com.example.fitapp.feature.auth.ui.LoginScreen
 import com.example.fitapp.feature.auth.ui.RegisterScreen
+import com.example.fitapp.feature.guest.ui.GuestScaffold
 import com.example.fitapp.feature.profile.ui.OnboardingScreen
 
 @Composable
@@ -25,6 +26,7 @@ fun AppNavHost(rootViewModel: RootViewModel = hiltViewModel()) {
         val target =
             when (state) {
                 RootState.LoggedOut -> if (current == Routes.REGISTER) Routes.REGISTER else Routes.LOGIN
+                RootState.Guest -> Routes.GUEST
                 RootState.NeedsOnboarding -> Routes.ONBOARDING
                 RootState.Ready -> Routes.MAIN
                 RootState.Loading, is RootState.Error -> Routes.SPLASH
@@ -45,12 +47,16 @@ fun AppNavHost(rootViewModel: RootViewModel = hiltViewModel()) {
             }
         }
         composable(Routes.LOGIN) {
-            LoginScreen(onNavigateToRegister = { navController.navigate(Routes.REGISTER) })
+            LoginScreen(
+                onNavigateToRegister = { navController.navigate(Routes.REGISTER) },
+                onContinueAsGuest = rootViewModel::enterGuest,
+            )
         }
         composable(Routes.REGISTER) {
             RegisterScreen(onNavigateToLogin = { navController.popBackStack() })
         }
         composable(Routes.ONBOARDING) { OnboardingScreen() }
         composable(Routes.MAIN) { MainScaffold() }
+        composable(Routes.GUEST) { GuestScaffold(onSignIn = rootViewModel::leaveGuest) }
     }
 }

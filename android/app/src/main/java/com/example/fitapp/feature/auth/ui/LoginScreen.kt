@@ -11,12 +11,14 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.fitapp.core.designsystem.components.ManButton
+import com.example.fitapp.core.designsystem.components.ManOutlinedButton
 import com.example.fitapp.core.designsystem.components.ManTextButton
 import com.example.fitapp.core.designsystem.components.ManTextField
 
 @Composable
 fun LoginScreen(
     onNavigateToRegister: () -> Unit,
+    onContinueAsGuest: (() -> Unit)? = null,
     viewModel: LoginViewModel = hiltViewModel(),
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
@@ -26,6 +28,7 @@ fun LoginScreen(
         onPasswordChange = viewModel::onPasswordChange,
         onSubmit = viewModel::submit,
         onNavigateToRegister = onNavigateToRegister,
+        onContinueAsGuest = onContinueAsGuest,
     )
 }
 
@@ -36,6 +39,7 @@ fun LoginContent(
     onPasswordChange: (String) -> Unit,
     onSubmit: () -> Unit,
     onNavigateToRegister: () -> Unit,
+    onContinueAsGuest: (() -> Unit)? = null,
 ) {
     AuthScaffold(title = "Welcome back", subtitle = "Log in to keep your streak alive.") {
         ManTextField(
@@ -70,5 +74,13 @@ fun LoginContent(
             enabled = !state.isSubmitting,
             modifier = Modifier.fillMaxWidth(),
         )
+        if (onContinueAsGuest != null) {
+            ManOutlinedButton(
+                text = "Continue as guest",
+                onClick = onContinueAsGuest,
+                enabled = !state.isSubmitting,
+                modifier = Modifier.fillMaxWidth().testTag("login_guest"),
+            )
+        }
     }
 }

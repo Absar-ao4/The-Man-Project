@@ -6,4 +6,5 @@ object Routes {
     const val REGISTER = "register"
     const val ONBOARDING = "onboarding"
     const val MAIN = "main"
+    const val GUEST = "guest"
 }

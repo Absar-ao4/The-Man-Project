@@ -89,6 +89,8 @@ After pulling a phase that changes the database, **clear the app's data**: the R
 
 ## Using the features
 
+Guest mode: the login screen has a "Continue as guest" button. A guest sees the five tabs as a preview (what each feature does, an example day on Home) but every feature that saves data or needs the server is a locked card that asks the person to sign in; only the theme setting works. Guest mode never touches the database or the backend, so the app can be looked at before any backend is set up. It lives in memory, so the next launch starts at the login screen again.
+
 Sync: the app keeps working offline and uploads in the background (30 seconds after a change, when it comes to the foreground, and every 6 hours). The Profile tab shows the sync state and has "Sync now" and "Restore from cloud".
 
 Lock-in mode (Workout tab) is a full-screen focus mode. Do Not Disturb and screen pinning are optional and the user decides each time: Android asks for the "Do Not Disturb access" and shows its own pin confirmation. Leaving always works by holding the exit button for two seconds. The two Lottie animations in `res/raw` can be replaced by your own files.

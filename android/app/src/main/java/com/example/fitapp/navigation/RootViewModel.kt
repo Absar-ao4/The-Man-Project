@@ -3,6 +3,7 @@ package com.example.fitapp.navigation
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.fitapp.core.datastore.TokenStore
+import com.example.fitapp.core.guest.GuestSession
 import com.example.fitapp.core.util.AppResult
 import com.example.fitapp.feature.profile.domain.ProfileRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -23,6 +24,9 @@ sealed interface RootState {
 
     data object LoggedOut : RootState
 
+    /** Looking around without an account: a preview that touches no database and no server. */
+    data object Guest : RootState
+
     data object NeedsOnboarding : RootState
 
     data object Ready : RootState
@@ -37,13 +41,14 @@ class RootViewModel
     constructor(
         private val tokens: TokenStore,
         private val profiles: ProfileRepository,
+        private val guest: GuestSession,
     ) : ViewModel() {
         private val loadError = MutableStateFlow<String?>(null)
 
         val state: StateFlow<RootState> =
-            combine(tokens.isLoggedIn, profiles.observeProfile(), loadError) { loggedIn, profile, error ->
+            combine(tokens.isLoggedIn, profiles.observeProfile(), loadError, guest.active) { loggedIn, profile, error, isGuest ->
                 when {
-                    !loggedIn -> RootState.LoggedOut
+                    !loggedIn -> if (isGuest) RootState.Guest else RootState.LoggedOut
                     profile != null -> if (profile.isComplete) RootState.Ready else RootState.NeedsOnboarding
                     error != null -> RootState.Error(error)
                     else -> RootState.Loading
@@ -53,10 +58,20 @@ class RootViewModel
         init {
             viewModelScope.launch {
                 tokens.isLoggedIn.collectLatest { loggedIn ->
-                    if (loggedIn) load() else loadError.value = null
+                    if (loggedIn) {
+                        // Signing in ends guest mode, so logging out later lands on the login screen.
+                        guest.leave()
+                        load()
+                    } else {
+                        loadError.value = null
+                    }
                 }
             }
         }
+
+        fun enterGuest() = guest.enter()
+
+        fun leaveGuest() = guest.leave()
 
         fun retry() {
             viewModelScope.launch { load() }
